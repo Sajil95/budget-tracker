@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Budget Tracker</title>
+  <title>Sajil's Personal Budget Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -24,54 +24,12 @@
     .accent-green { background-color: #2ECC71; }
     .modal { transition: opacity 0.3s ease; }
     .chart-container { max-width: 400px; margin: auto; }
-    #loginScreen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.5);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-    #loginScreen.hidden {
-      display: none;
-    }
-    #loginForm {
-      background-color: #1F2937;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-      width: 300px;
-      color: #D2B48C;
-    }
-    #loginForm input, #loginForm button {
-      width: 100%;
-      margin-bottom: 10px;
-      padding: 8px;
-      box-sizing: border-box;
-      border: 1px solid #4B5563;
-      border-radius: 4px;
-      background-color: #2D3748;
-      color: #D2B48C;
-    }
   </style>
 </head>
 <body>
-  <div id="loginScreen">
-    <div id="loginForm">
-      <h2 class="text-xl font-semibold mb-4">Login</h2>
-      <input type="text" id="userIdInput" placeholder="Enter user ID" class="mb-4">
-      <input type="password" id="passwordInput" placeholder="Enter password" class="mb-4">
-      <button class="px-4 py-2 accent-blue text-white rounded-lg" onclick="checkLogin()">Login</button>
-    </div>
-  </div>
-
   <div class="container mx-auto p-6">
     <!-- Header -->
-    <h1 class="text-4xl font-bold text-center mb-8">Budget Tracker</h1>
+    <h1 class="text-4xl font-bold text-center mb-8">Sajil's Personal Budget Tracker</h1>
 
     <!-- Tabs Navigation -->
     <div class="flex flex-wrap justify-center mb-6 gap-2">
@@ -120,6 +78,10 @@
           <div class="chart-container">
             <h3 class="text-lg font-semibold text-center">Expense Breakdown</h3>
             <canvas id="expenseChart"></canvas>
+          </div>
+          <div class="chart-container">
+            <h3 class="text-lg font-semibold text-center">Category Comparison</h3>
+            <canvas id="categoryChart"></canvas>
           </div>
         </div>
         <div class="mt-6">
@@ -341,26 +303,15 @@
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"></script>
   <script>
-    // Firebase Configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyDkMTBs6rrzdRznOSKcl0iBXg9Vmv803AI",
-      authDomain: "sajil-s-budget-tracker.firebaseapp.com",
-      projectId: "sajil-s-budget-tracker",
-      storageBucket: "sajil-s-budget-tracker.firebasestorage.app",
-      messagingSenderId: "302667792287",
-      appId: "1:302667792287:web:651ef8482e66362a8007aa",
-      measurementId: "G-C1Y4Q3NL4R"
-    };
-
-    // Initialize Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    let incomeData = JSON.parse(localStorage.getItem('incomeData')) || [];
-    let expenseData = JSON.parse(localStorage.getItem('expenseData')) || [];
+    let incomeData = JSON.parse(localStorage.getItem('incomeData')) || [
+      { id: 1, date: '2025-01-01', category: 'Salary', description: 'Monthly Salary', amount: 3000 },
+      { id: 2, date: '2025-01-05', category: 'Freelance', description: 'Project Payment', amount: 500 }
+    ];
+    let expenseData = JSON.parse(localStorage.getItem('expenseData')) || [
+      { id: 1, date: '2025-01-02', category: 'Rent', description: 'Apartment Rent', amount: 1200 },
+      { id: 2, date: '2025-01-03', category: 'Groceries', description: 'Weekly Shopping', amount: 150 }
+    ];
     let anticipatedExpenses = JSON.parse(localStorage.getItem('anticipatedExpenses')) || [];
     let goals = JSON.parse(localStorage.getItem('goals')) || [];
 
@@ -385,66 +336,19 @@
       document.getElementById(modalId).classList.add('hidden');
     }
 
-    function checkLogin() {
-      const userId = document.getElementById('userIdInput').value;
-      const password = document.getElementById('passwordInput').value;
-      const defaultPassword = 'NimmySajil99$$';
-      const storedCredentials = JSON.parse(localStorage.getItem('credentials')) || { userId: '', password: defaultPassword };
-
-      if (password === storedCredentials.password) {
-        document.getElementById('loginScreen').classList.add('hidden');
-        if (!storedCredentials.userId) {
-          localStorage.setItem('credentials', JSON.stringify({ userId: userId, password: defaultPassword }));
-        }
-        loadDataFromFirestore();
-      } else {
-        alert('Invalid password');
-      }
-    }
-
-    function loadDataFromFirestore() {
-      db.collection('income').get().then((querySnapshot) => {
-        incomeData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        localStorage.setItem('incomeData', JSON.stringify(incomeData));
-        renderIncomeTable();
-        updateDashboard();
-        updateSummary();
-      });
-      db.collection('expenses').get().then((querySnapshot) => {
-        expenseData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        localStorage.setItem('expenseData', JSON.stringify(expenseData));
-        renderExpenseTable();
-        updateDashboard();
-        updateSummary();
-      });
-      db.collection('anticipatedExpenses').get().then((querySnapshot) => {
-        anticipatedExpenses = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        localStorage.setItem('anticipatedExpenses', JSON.stringify(anticipatedExpenses));
-        renderAnticipatedTable();
-      });
-      db.collection('goals').get().then((querySnapshot) => {
-        goals = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        localStorage.setItem('goals', JSON.stringify(goals));
-        renderGoals();
-      });
-    }
-
     function addIncome() {
       const date = document.getElementById('incomeDate').value;
       const category = document.getElementById('incomeCategory').value;
       const description = document.getElementById('incomeDescription').value;
       const amount = parseFloat(document.getElementById('incomeAmount').value);
       if (date && description && !isNaN(amount)) {
-        db.collection('income').add({ date, category, description, amount })
-          .then((docRef) => {
-            const id = docRef.id;
-            incomeData.push({ id, date, category, description, amount });
-            localStorage.setItem('incomeData', JSON.stringify(incomeData));
-            renderIncomeTable();
-            closeModal('incomeModal');
-            updateDashboard();
-            updateSummary();
-          });
+        const id = incomeData.length ? Math.max(...incomeData.map(i => i.id)) + 1 : 1;
+        incomeData.push({ id, date, category, description, amount });
+        localStorage.setItem('incomeData', JSON.stringify(incomeData));
+        renderIncomeTable();
+        closeModal('incomeModal');
+        updateDashboard();
+        updateSummary();
       }
     }
 
@@ -454,16 +358,13 @@
       const description = document.getElementById('expenseDescription').value;
       const amount = parseFloat(document.getElementById('expenseAmount').value);
       if (date && description && !isNaN(amount)) {
-        db.collection('expenses').add({ date, category, description, amount })
-          .then((docRef) => {
-            const id = docRef.id;
-            expenseData.push({ id, date, category, description, amount });
-            localStorage.setItem('expenseData', JSON.stringify(expenseData));
-            renderExpenseTable();
-            closeModal('expenseModal');
-            updateDashboard();
-            updateSummary();
-          });
+        const id = expenseData.length ? Math.max(...expenseData.map(e => e.id)) + 1 : 1;
+        expenseData.push({ id, date, category, description, amount });
+        localStorage.setItem('expenseData', JSON.stringify(expenseData));
+        renderExpenseTable();
+        closeModal('expenseModal');
+        updateDashboard();
+        updateSummary();
       }
     }
 
@@ -471,15 +372,12 @@
       const category = document.getElementById('anticipatedCategory').value;
       const description = document.getElementById('anticipatedDescription').value;
       const amount = parseFloat(document.getElementById('anticipatedAmount').value);
-      if (description && !isNaN(amount)) {
-        db.collection('anticipatedExpenses').add({ category, description, amount })
-          .then((docRef) => {
-            const id = docRef.id;
-            anticipatedExpenses.push({ id, category, description, amount });
-            localStorage.setItem('anticipatedExpenses', JSON.stringify(anticipatedExpenses));
-            renderAnticipatedTable();
-            closeModal('anticipatedModal');
-          });
+      if (description && !isNansan(amount)) {
+        const id = anticipatedExpenses.length ? Math.max(...anticipatedExpenses.map(e => e.id)) + 1 : 1;
+        anticipatedExpenses.push({ id, category, description, amount });
+        localStorage.setItem('anticipatedExpenses', JSON.stringify(anticipatedExpenses));
+        renderAnticipatedTable();
+        closeModal('anticipatedModal');
       }
     }
 
@@ -488,14 +386,11 @@
       const amount = parseFloat(document.getElementById('goalAmount').value);
       const deadline = document.getElementById('goalDeadline').value;
       if (name && !isNaN(amount) && deadline) {
-        db.collection('goals').add({ name, amount, deadline, saved: 0 })
-          .then((docRef) => {
-            const id = docRef.id;
-            goals.push({ id, name, amount, deadline, saved: 0 });
-            localStorage.setItem('goals', JSON.stringify(goals));
-            renderGoals();
-            closeModal('goalModal');
-          });
+        const id = goals.length ? Math.max(...goals.map(g => g.id)) + 1 : 1;
+        goals.push({ id, name, amount, deadline, saved: 0 });
+        localStorage.setItem('goals', JSON.stringify(goals));
+        renderGoals();
+        closeModal('goalModal');
       }
     }
 
@@ -510,7 +405,8 @@
           <td class="p-3 border border-gray-600">${item.description}</td>
           <td class="p-3 border border-gray-600">$${item.amount.toFixed(2)}</td>
           <td class="p-3 border border-gray-600">
-            <button class="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600" onclick="deleteIncome('${item.id}')">Delete</button>
+            <button class="px-2 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600" onclick="editIncome(${item.id})">Edit</button>
+            <button class="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600" onclick="deleteIncome(${item.id})">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -528,7 +424,8 @@
           <td class="p-3 border border-gray-600">${item.description}</td>
           <td class="p-3 border border-gray-600">$${item.amount.toFixed(2)}</td>
           <td class="p-3 border border-gray-600">
-            <button class="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600" onclick="deleteExpense('${item.id}')">Delete</button>
+            <button class="px-2 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600" onclick="editExpense(${item.id})">Edit</button>
+            <button class="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600" onclick="deleteExpense(${item.id})">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -545,7 +442,7 @@
           <td class="p-3 border border-gray-600">${item.description}</td>
           <td class="p-3 border border-gray-600">$${item.amount.toFixed(2)}</td>
           <td class="p-3 border border-gray-600">
-            <button class="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600" onclick="deleteAnticipated('${item.id}')">Delete</button>
+            <button class="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600" onclick="deleteAnticipated(${item.id})">Delete</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -568,8 +465,8 @@
           </div>
           <div class="flex gap-4 mt-4">
             <input type="number" id="saveGoal${goal.id}" placeholder="Add savings" step="0.01" class="p-2 border rounded-lg w-32 bg-gray-700">
-            <button class="px-4 py-2 accent-green text-white rounded-lg" onclick="addSavings('${goal.id}')">Add Savings</button>
-            <button class="px-4 py-2 bg-red-500 text-white rounded-lg" onclick="deleteGoal('${goal.id}')">Delete Goal</button>
+            <button class="px-4 py-2 accent-green text-white rounded-lg" onclick="addSavings(${goal.id})">Add Savings</button>
+            <button class="px-4 py-2 bg-red-500 text-white rounded-lg" onclick="deleteGoal(${item.id})">Delete Goal</button>
           </div>
         `;
         container.appendChild(div);
@@ -595,40 +492,56 @@
       });
     }
 
+    function editIncome(id) {
+      const item = incomeData.find(i => i.id === id);
+      if (item) {
+        document.getElementById('incomeDate').value = item.date;
+        document.getElementById('incomeCategory').value = item.category;
+        document.getElementById('incomeDescription').value = item.description;
+        document.getElementById('incomeAmount').value = item.amount;
+        openModal('incomeModal');
+        deleteIncome(id);
+      }
+    }
+
+    function editExpense(id) {
+      const item = expenseData.find(e => e.id === id);
+      if (item) {
+        document.getElementById('expenseDate').value = item.date;
+        document.getElementById('expenseCategory').value = item.category;
+        document.getElementById('expenseDescription').value = item.description;
+        document.getElementById('expenseAmount').value = item.amount;
+        openModal('expenseModal');
+        deleteExpense(id);
+      }
+    }
+
     function deleteIncome(id) {
-      db.collection('income').doc(id).delete().then(() => {
-        incomeData = incomeData.filter(i => i.id !== id);
-        localStorage.setItem('incomeData', JSON.stringify(incomeData));
-        renderIncomeTable();
-        updateDashboard();
-        updateSummary();
-      });
+      incomeData = incomeData.filter(i => i.id !== id);
+      localStorage.setItem('incomeData', JSON.stringify(incomeData));
+      renderIncomeTable();
+      updateDashboard();
+      updateSummary();
     }
 
     function deleteExpense(id) {
-      db.collection('expenses').doc(id).delete().then(() => {
-        expenseData = expenseData.filter(e => e.id !== id);
-        localStorage.setItem('expenseData', JSON.stringify(expenseData));
-        renderExpenseTable();
-        updateDashboard();
-        updateSummary();
-      });
+      expenseData = expenseData.filter(e => e.id !== id);
+      localStorage.setItem('expenseData', JSON.stringify(expenseData));
+      renderExpenseTable();
+      updateDashboard();
+      updateSummary();
     }
 
     function deleteAnticipated(id) {
-      db.collection('anticipatedExpenses').doc(id).delete().then(() => {
-        anticipatedExpenses = anticipatedExpenses.filter(e => e.id !== id);
-        localStorage.setItem('anticipatedExpenses', JSON.stringify(anticipatedExpenses));
-        renderAnticipatedTable();
-      });
+      anticipatedExpenses = anticipatedExpenses.filter(e => e.id !== id);
+      localStorage.setItem('anticipatedExpenses', JSON.stringify(anticipatedExpenses));
+      renderAnticipatedTable();
     }
 
     function deleteGoal(id) {
-      db.collection('goals').doc(id).delete().then(() => {
-        goals = goals.filter(g => g.id !== id);
-        localStorage.setItem('goals', JSON.stringify(goals));
-        renderGoals();
-      });
+      goals = goals.filter(g => g.id !== id);
+      localStorage.setItem('goals', JSON.stringify(goals));
+      renderGoals();
     }
 
     function addSavings(id) {
@@ -637,11 +550,9 @@
       if (!isNaN(amount) && amount > 0) {
         const goal = goals.find(g => g.id === id);
         if (goal) {
-          db.collection('goals').doc(id).update({ saved: goal.saved + amount }).then(() => {
-            goal.saved += amount;
-            localStorage.setItem('goals', JSON.stringify(goals));
-            renderGoals();
-          });
+          goal.saved += amount;
+          localStorage.setItem('goals', JSON.stringify(goals));
+          renderGoals();
         }
       }
       input.value = '';
@@ -714,6 +625,29 @@
         options: {
           plugins: { legend: { position: 'bottom', labels: { color: '#D2B48C' } } },
           cutout: '60%'
+        }
+      });
+
+      // Category Comparison Chart
+      const incomeDataByCategory = ['Salary', 'Freelance', 'Investment', 'Other'].map(category =>
+        incomeData
+          .filter(item => item.category === category && new Date(item.date).getFullYear() === year && new Date(item.date).getMonth() + 1 === monthIndex)
+          .reduce((sum, item) => sum + item.amount, 0)
+      );
+
+      if (categoryChart) categoryChart.destroy();
+      categoryChart = new Chart(document.getElementById('categoryChart'), {
+        type: 'bar',
+        data: {
+          labels: expenseCategories,
+          datasets: [
+            { label: 'Expenses', data: expenseDataByCategory, backgroundColor: '#EF4444' },
+            { label: 'Income', data: incomeDataByCategory.slice(0, expenseCategories.length), backgroundColor: '#2ECC71' }
+          ]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { color: '#D2B48C' } } },
+          scales: { y: { beginAtZero: true, ticks: { color: '#D2B48C' } }, x: { ticks: { color: '#D2B48C' } } }
         }
       });
     }
@@ -846,7 +780,7 @@
 
     // Initialize
     showTab('dashboard');
-    document.getElementById('monthFilter').value = 'June';
+    document.getElementById('monthFilter').value = 'January';
     document.getElementById('yearFilter').value = '2025';
     document.getElementById('summaryYearFilter').value = '2025';
     updateDashboard();
