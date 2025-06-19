@@ -7,9 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
   <style>
     body { 
       background-color: #2D3748; 
@@ -27,20 +24,71 @@
     .accent-green { background-color: #2ECC71; }
     .modal { transition: opacity 0.3s ease; }
     .chart-container { max-width: 400px; margin: auto; }
+    #loginScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    #loginScreen.hidden {
+      display: none;
+    }
+    #loginForm, #resetForm {
+      background-color: #1F2937;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      width: 300px;
+      color: #D2B48C;
+    }
+    #loginForm input, #resetForm input, #loginForm button, #resetForm button {
+      width: 100%;
+      margin-bottom: 10px;
+      padding: 8px;
+      box-sizing: border-box;
+      border: 1px solid #4B5563;
+      border-radius: 4px;
+      background-color: #2D3748;
+      color: #D2B48C;
+    }
+    #forgotPassword {
+      color: #4B90E2;
+      cursor: pointer;
+      text-align: center;
+      display: block;
+      text-decoration: none;
+    }
+    #forgotPassword:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <div id="authModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div class="bg-gray-800 p-6 rounded-lg w-full max-w-md text-white">
-      <h3 class="text-lg font-semibold mb-4">Enter Password</h3>
-      <input type="password" id="userPassword" placeholder="Your personal password" class="p-2 border rounded-lg w-full mb-4 bg-gray-700">
-      <div class="flex justify-end gap-4">
-        <button class="px-4 py-2 accent-green text-white rounded-lg" onclick="authenticate()">Access Tracker</button>
-      </div>
+  <div id="loginScreen">
+    <div id="loginForm">
+      <h2 class="text-xl font-semibold mb-4">Login</h2>
+      <input type="text" id="userIdInput" placeholder="Enter user ID" class="mb-4">
+      <input type="password" id="passwordInput" placeholder="Enter password" class="mb-4">
+      <button class="px-4 py-2 accent-blue text-white rounded-lg" onclick="checkLogin()">Login</button>
+      <span id="forgotPassword" onclick="showResetForm()">Forgot Password?</span>
+    </div>
+    <div id="resetForm" style="display: none;">
+      <h2 class="text-xl font-semibold mb-4">Reset Password</h2>
+      <input type="text" id="resetUserIdInput" placeholder="Enter user ID" class="mb-4">
+      <input type="password" id="oldPasswordInput" placeholder="Enter old password" class="mb-4">
+      <input type="password" id="newPasswordInput" placeholder="Enter new password" class="mb-4">
+      <button class="px-4 py-2 accent-blue text-white rounded-lg" onclick="resetPassword()">Reset Password</button>
+      <button class="px-4 py-2 bg-gray-600 text-white rounded-lg" onclick="showLoginForm()">Back to Login</button>
     </div>
   </div>
 
-  <div id="mainContent" class="container mx-auto p-6 hidden">
+  <div class="container mx-auto p-6">
     <!-- Header -->
     <h1 class="text-4xl font-bold text-center mb-8">Sajil's Personal Budget Tracker</h1>
 
@@ -99,7 +147,7 @@
         </div>
         <div class="mt-6">
           <h3 class="text-lg font-semibold">Quick Actions</h3>
-          <div class="flex flex-wrap gap-4 mt-4">
+          <div class="flex gap-4 mt-4">
             <button class="px-6 py-3 accent-blue text-white rounded-lg hover:bg-blue-500" onclick="showTab('income')">Add Income</button>
             <button class="px-6 py-3 accent-blue text-white rounded-lg hover:bg-blue-500" onclick="showTab('expenses')">Add Expense</button>
             <button class="px-6 py-3 accent-green text-white rounded-lg hover:bg-green-500" onclick="showTab('goals')">Set Goal</button>
@@ -316,78 +364,36 @@
     </div>
   </div>
 
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"></script>
   <script>
-    // Firebase Configuration (Replace with your own Firebase project config)
+    // Firebase Configuration (Replace with your Firebase project config)
     const firebaseConfig = {
-  apiKey: "AIzaSyDkMTBs6rrzdRznOSKcl0iBXg9Vmv803AI",
-  authDomain: "sajil-s-budget-tracker.firebaseapp.com",
-  projectId: "sajil-s-budget-tracker",
-  storageBucket: "sajil-s-budget-tracker.firebasestorage.app",
-  messagingSenderId: "302667792287",
-  appId: "1:302667792287:web:2c8e8af57081783c8007aa",
-  measurementId: "G-ZCJ74H4B3B"
-};
+    apiKey: "AIzaSyDURpOp1bCQ7OkYip0u6KocSTLURqJOtPA",
+    authDomain: "sajil-s-budget-tracker-updated.firebaseapp.com",
+    projectId: "sajil-s-budget-tracker-updated",
+    storageBucket: "sajil-s-budget-tracker-updated.firebasestorage.app",
+    messagingSenderId: "908286203682",
+    appId: "1:908286203682:web:24a29604fe6b5dda83777b",
+    measurementId: "G-HXHLS4FY2R"
+  };
 
     // Initialize Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    let userId = null; // Will be set after authentication
 
-    let incomeData = [];
-    let expenseData = [];
-    let anticipatedExpenses = [];
-    let goals = [];
+    let incomeData = JSON.parse(localStorage.getItem('incomeData')) || [
+      { id: 1, date: '2025-01-01', category: 'Salary', description: 'Monthly Salary', amount: 3000 },
+      { id: 2, date: '2025-01-05', category: 'Freelance', description: 'Project Payment', amount: 500 }
+    ];
+    let expenseData = JSON.parse(localStorage.getItem('expenseData')) || [
+      { id: 1, date: '2025-01-02', category: 'Rent', description: 'Apartment Rent', amount: 1200 },
+      { id: 2, date: '2025-01-03', category: 'Groceries', description: 'Weekly Shopping', amount: 150 }
+    ];
+    let anticipatedExpenses = JSON.parse(localStorage.getItem('anticipatedExpenses')) || [];
+    let goals = JSON.parse(localStorage.getItem('goals')) || [];
+
     let trendChart, expenseChart, categoryChart, savingsChart, yearlySummaryChart, savingsAllocationChart;
-
-    async function authenticate() {
-      const password = document.getElementById('userPassword').value;
-      if (!password) {
-        alert('Please enter a password.');
-        return;
-      }
-      // Generate a userId based on password hash (simple for single-user)
-      userId = btoa(password); // Base64 encode for simplicity
-      document.getElementById('authModal').classList.add('hidden');
-      document.getElementById('mainContent').classList.remove('hidden');
-      // Load data for this user
-      await loadData();
-      showTab('dashboard');
-    }
-
-    async function loadData() {
-      if (!userId) return;
-      // Load income
-      const incomeSnapshot = await db.collection('users').doc(userId).collection('income').get();
-      incomeData = incomeSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      // Load expenses
-      const expenseSnapshot = await db.collection('users').doc(userId).collection('expenses').get();
-      expenseData = expenseSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      // Load anticipated expenses
-      const anticipatedSnapshot = await db.collection('users').doc(userId).collection('anticipated').get();
-      anticipatedExpenses = anticipatedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      // Load goals
-      const goalsSnapshot = await db.collection('users').doc(userId).collection('goals').get();
-      goals = goalsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      // Initialize with sample data if empty
-      if (incomeData.length === 0) {
-        incomeData = [
-          { id: '1', date: '2025-01-01', category: 'Salary', description: 'Monthly Salary', amount: 3000 },
-          { id: '2', date: '2025-01-05', category: 'Freelance', description: 'Project Payment', amount: 500 }
-        ];
-        for (const item of incomeData) {
-          await db.collection('users').doc(userId).collection('income').doc(item.id).set(item);
-        }
-      }
-      if (expenseData.length === 0) {
-        expenseData = [
-          { id: '1', date: '2025-01-02', category: 'Rent', description: 'Apartment Rent', amount: 1200 },
-          { id: '2', date: '2025-01-03', category: 'Groceries', description: 'Weekly Shopping', amount: 150 }
-        ];
-        for (const item of expenseData) {
-          await db.collection('users').doc(userId).collection('expenses').doc(item.id).set(item);
-        }
-      }
-    }
 
     function showTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
@@ -408,65 +414,141 @@
       document.getElementById(modalId).classList.add('hidden');
     }
 
-    async function addIncome() {
+    function checkLogin() {
+      const userId = document.getElementById('userIdInput').value;
+      const password = document.getElementById('passwordInput').value;
+      const storedCredentials = JSON.parse(localStorage.getItem('credentials')) || { userId: 'Sajil', password: 'NimmySajil99$$' };
+
+      if (userId === storedCredentials.userId && password === storedCredentials.password) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        loadDataFromFirestore();
+      } else {
+        alert('Invalid user ID or password');
+      }
+    }
+
+    function showResetForm() {
+      document.getElementById('loginForm').style.display = 'none';
+      document.getElementById('resetForm').style.display = 'block';
+    }
+
+    function showLoginForm() {
+      document.getElementById('loginForm').style.display = 'block';
+      document.getElementById('resetForm').style.display = 'none';
+    }
+
+    function resetPassword() {
+      const resetUserId = document.getElementById('resetUserIdInput').value;
+      const oldPassword = document.getElementById('oldPasswordInput').value;
+      const newPassword = document.getElementById('newPasswordInput').value;
+      const storedCredentials = JSON.parse(localStorage.getItem('credentials')) || { userId: 'Sajil', password: 'NimmySajil99$$' };
+
+      if (resetUserId === storedCredentials.userId && oldPassword === storedCredentials.password) {
+        if (newPassword.length >= 6) {
+          localStorage.setItem('credentials', JSON.stringify({
+            userId: resetUserId,
+            password: newPassword
+          }));
+          alert('Password reset successfully');
+          showLoginForm();
+        } else {
+          alert('New password must be at least 6 characters long');
+        }
+      } else {
+        alert('Invalid user ID or old password');
+      }
+    }
+
+    function loadDataFromFirestore() {
+      db.collection('income').get().then((querySnapshot) => {
+        incomeData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        localStorage.setItem('incomeData', JSON.stringify(incomeData));
+        renderIncomeTable();
+        updateDashboard();
+        updateSummary();
+      });
+      db.collection('expenses').get().then((querySnapshot) => {
+        expenseData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        localStorage.setItem('expenseData', JSON.stringify(expenseData));
+        renderExpenseTable();
+        updateDashboard();
+        updateSummary();
+      });
+      db.collection('anticipatedExpenses').get().then((querySnapshot) => {
+        anticipatedExpenses = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        localStorage.setItem('anticipatedExpenses', JSON.stringify(anticipatedExpenses));
+        renderAnticipatedTable();
+      });
+      db.collection('goals').get().then((querySnapshot) => {
+        goals = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        localStorage.setItem('goals', JSON.stringify(goals));
+        renderGoals();
+      });
+    }
+
+    function addIncome() {
       const date = document.getElementById('incomeDate').value;
       const category = document.getElementById('incomeCategory').value;
       const description = document.getElementById('incomeDescription').value;
       const amount = parseFloat(document.getElementById('incomeAmount').value);
       if (date && description && !isNaN(amount)) {
-        const id = Date.now().toString(); // Unique ID
-        const item = { id, date, category, description, amount };
-        incomeData.push(item);
-        await db.collection('users').doc(userId).collection('income').doc(id).set(item);
-        renderIncomeTable();
-        closeModal('incomeModal');
-        updateDashboard();
-        updateSummary();
+        const id = incomeData.length ? Math.max(...incomeData.map(i => i.id)) + 1 : 1;
+        db.collection('income').add({ date, category, description, amount }).then((docRef) => {
+          incomeData.push({ id: docRef.id, date, category, description, amount });
+          localStorage.setItem('incomeData', JSON.stringify(incomeData));
+          renderIncomeTable();
+          closeModal('incomeModal');
+          updateDashboard();
+          updateSummary();
+        });
       }
     }
 
-    async function addExpense() {
+    function addExpense() {
       const date = document.getElementById('expenseDate').value;
       const category = document.getElementById('expenseCategory').value;
       const description = document.getElementById('expenseDescription').value;
       const amount = parseFloat(document.getElementById('expenseAmount').value);
       if (date && description && !isNaN(amount)) {
-        const id = Date.now().toString();
-        const item = { id, date, category, description, amount };
-        expenseData.push(item);
-        await db.collection('users').doc(userId).collection('expenses').doc(id).set(item);
-        renderExpenseTable();
-        closeModal('expenseModal');
-        updateDashboard();
-        updateSummary();
+        const id = expenseData.length ? Math.max(...expenseData.map(e => e.id)) + 1 : 1;
+        db.collection('expenses').add({ date, category, description, amount }).then((docRef) => {
+          expenseData.push({ id: docRef.id, date, category, description, amount });
+          localStorage.setItem('expenseData', JSON.stringify(expenseData));
+          renderExpenseTable();
+          closeModal('expenseModal');
+          updateDashboard();
+          updateSummary();
+        });
       }
     }
 
-    async function addAnticipatedExpense() {
+    function addAnticipatedExpense() {
       const category = document.getElementById('anticipatedCategory').value;
       const description = document.getElementById('anticipatedDescription').value;
       const amount = parseFloat(document.getElementById('anticipatedAmount').value);
       if (description && !isNaN(amount)) {
-        const id = Date.now().toString();
-        const item = { id, category, description, amount };
-        anticipatedExpenses.push(item);
-        await db.collection('users').doc(userId).collection('anticipated').doc(id).set(item);
-        renderAnticipatedTable();
-        closeModal('anticipatedModal');
+        const id = anticipatedExpenses.length ? Math.max(...anticipatedExpenses.map(e => e.id)) + 1 : 1;
+        db.collection('anticipatedExpenses').add({ category, description, amount }).then((docRef) => {
+          anticipatedExpenses.push({ id: docRef.id, category, description, amount });
+          localStorage.setItem('anticipatedExpenses', JSON.stringify(anticipatedExpenses));
+          renderAnticipatedTable();
+          closeModal('anticipatedModal');
+        });
       }
     }
 
-    async function addGoal() {
+    function addGoal() {
       const name = document.getElementById('goalName').value;
       const amount = parseFloat(document.getElementById('goalAmount').value);
       const deadline = document.getElementById('goalDeadline').value;
       if (name && !isNaN(amount) && deadline) {
-        const id = Date.now().toString();
-        const item = { id, name, amount, deadline, saved: 0 };
-        goals.push(item);
-        await db.collection('users').doc(userId).collection('goals').doc(id).set(item);
-        renderGoals();
-        closeModal('goalModal');
+        const id = goals.length ? Math.max(...goals.map(g => g.id)) + 1 : 1;
+        db.collection('goals').add({ name, amount, deadline, saved: 0 }).then((docRef) => {
+          goals.push({ id: docRef.id, name, amount, deadline, saved: 0 });
+          localStorage.setItem('goals', JSON.stringify(goals));
+          renderGoals();
+          closeModal('goalModal');
+        });
       }
     }
 
@@ -542,7 +624,7 @@
           <div class="flex gap-4 mt-4">
             <input type="number" id="saveGoal${goal.id}" placeholder="Add savings" step="0.01" class="p-2 border rounded-lg w-32 bg-gray-700">
             <button class="px-4 py-2 accent-green text-white rounded-lg" onclick="addSavings('${goal.id}')">Add Savings</button>
-            <button class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" onclick="deleteGoal('${goal.id}')">Delete Goal</button>
+            <button class="px-4 py-2 bg-red-500 text-white rounded-lg" onclick="deleteGoal('${goal.id}')">Delete Goal</button>
           </div>
         `;
         container.appendChild(div);
@@ -568,7 +650,7 @@
       });
     }
 
-    async function editIncome(id) {
+    function editIncome(id) {
       const item = incomeData.find(i => i.id === id);
       if (item) {
         document.getElementById('incomeDate').value = item.date;
@@ -576,59 +658,69 @@
         document.getElementById('incomeDescription').value = item.description;
         document.getElementById('incomeAmount').value = item.amount;
         openModal('incomeModal');
-        await deleteIncome(id);
+        deleteIncome(id);
       }
     }
 
-    async function editExpense(id) {
-      const item = expenseData.find(i => i.id === id);
+    function editExpense(id) {
+      const item = expenseData.find(e => e.id === id);
       if (item) {
         document.getElementById('expenseDate').value = item.date;
         document.getElementById('expenseCategory').value = item.category;
         document.getElementById('expenseDescription').value = item.description;
         document.getElementById('expenseAmount').value = item.amount;
         openModal('expenseModal');
-        await deleteExpense(id);
+        deleteExpense(id);
       }
     }
 
-    async function deleteIncome(id) {
-      incomeData = incomeData.filter(i => i.id !== id);
-      await db.collection('users').doc(userId).collection('income').doc(id).delete();
-      renderIncomeTable();
-      updateDashboard();
-      updateSummary();
+    function deleteIncome(id) {
+      db.collection('income').doc(id).delete().then(() => {
+        incomeData = incomeData.filter(i => i.id !== id);
+        localStorage.setItem('incomeData', JSON.stringify(incomeData));
+        renderIncomeTable();
+        updateDashboard();
+        updateSummary();
+      });
     }
 
-    async function deleteExpense(id) {
-      expenseData = expenseData.filter(e => e.id !== id);
-      await db.collection('users').doc(userId).collection('expenses').doc(id).delete();
-      renderExpenseTable();
-      updateDashboard();
-      updateSummary();
+    function deleteExpense(id) {
+      db.collection('expenses').doc(id).delete().then(() => {
+        expenseData = expenseData.filter(e => e.id !== id);
+        localStorage.setItem('expenseData', JSON.stringify(expenseData));
+        renderExpenseTable();
+        updateDashboard();
+        updateSummary();
+      });
     }
 
-    async function deleteAnticipated(id) {
-      anticipatedExpenses = anticipatedExpenses.filter(e => e.id !== id);
-      await db.collection('users').doc(userId).collection('anticipated').doc(id).delete();
-      renderAnticipatedTable();
+    function deleteAnticipated(id) {
+      db.collection('anticipatedExpenses').doc(id).delete().then(() => {
+        anticipatedExpenses = anticipatedExpenses.filter(e => e.id !== id);
+        localStorage.setItem('anticipatedExpenses', JSON.stringify(anticipatedExpenses));
+        renderAnticipatedTable();
+      });
     }
 
-    async function deleteGoal(id) {
-      goals = goals.filter(g => g.id !== id);
-      await db.collection('users').doc(userId).collection('goals').doc(id).delete();
-      renderGoals();
+    function deleteGoal(id) {
+      db.collection('goals').doc(id).delete().then(() => {
+        goals = goals.filter(g => g.id !== id);
+        localStorage.setItem('goals', JSON.stringify(goals));
+        renderGoals();
+      });
     }
 
-    async function addSavings(id) {
+    function addSavings(id) {
       const input = document.getElementById(`saveGoal${id}`);
       const amount = parseFloat(input.value);
       if (!isNaN(amount) && amount > 0) {
         const goal = goals.find(g => g.id === id);
         if (goal) {
-          goal.saved += amount;
-          await db.collection('users').doc(userId).collection('goals').doc(id).update({ saved: goal.saved });
-          renderGoals();
+          db.collection('goals').doc(id).update({ saved: goal.saved + amount }).then(() => {
+            goal.saved += amount;
+            localStorage.setItem('goals', JSON.stringify(goals));
+            renderGoals();
+          });
         }
       }
       input.value = '';
@@ -680,7 +772,7 @@
         options: { plugins: { legend: { position: 'bottom', labels: { color: '#D2B48C' } } } }
       });
 
-      // Expense Chart (Smaller Doughnut)
+      // Expense Chart (Smaller Pie)
       const expenseCategories = ['Rent', 'Mortgage', 'Utilities', 'Groceries', 'Transport', 'Entertainment', 'Other'];
       const expenseDataByCategory = expenseCategories.map(category =>
         expenseData
@@ -855,9 +947,16 @@
     }
 
     // Initialize
-    document.getElementById('monthFilter').value = 'January';
-    document.getElementById('yearFilter').value = '2025';
-    document.getElementById('summaryYearFilter').value = '2025';
+    const storedCredentials = JSON.parse(localStorage.getItem('credentials'));
+    if (storedCredentials && storedCredentials.userId && storedCredentials.password) {
+      document.getElementById('userIdInput').value = storedCredentials.userId;
+      loadDataFromFirestore();
+      showTab('dashboard');
+      document.getElementById('monthFilter').value = 'January';
+      document.getElementById('yearFilter').value = '2025';
+      document.getElementById('summaryYearFilter').value = '2025';
+      updateDashboard();
+    }
   </script>
 </body>
 </html>
